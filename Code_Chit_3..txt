@@ -1,0 +1,2 @@
+1) Melting of the pandas dataframe:->
+	Flag=data.melt(id_vars=['ClaimId','Type','pageNo','imageType','Image_Risk'],value_vars=data.loc[7:])

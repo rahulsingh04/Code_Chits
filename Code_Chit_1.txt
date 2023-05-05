@@ -1,0 +1,586 @@
+PANDAS
+
+1) How to check if the columns of the 2 dataframe is equal or not 
+
+patients['Id'].isin(careplans['PATIENT']).value_counts(normalize = True)*100
+
+
+a)   if the value is less than zero convert it into an nan
+
+df1['Current_Patient_Age']  = np.where(df1["Current_Patient_Age"]<0 , np.nan , df1['Current_Patient_Age'] ) 
+
+
+b)   How to check the duplicate value and drop it 
+
+df1.duplicated(subset=["PATIENT_ID"]).value_counts(normalize = True)
+df1.drop_duplicates(subset = ["PATIENT_ID"] , keep = "first" , inplace = True)
+
+-------------------------------------------------
+
+2) FLAG THE DATA FRAME THAT CONTAINS STRING WITH
+
+
+StringList=['Chronic congestive heart failure']
+StringPattern="|".join(StringList)
+
+careplans['ExclusionFlag']=careplans['REASONDESCRIPTION'].str.contains(StringPattern, case=False)
+careplans['ExclusionFlag'] = np.where(careplans['REASONDESCRIPTION'].str.contains(StringPattern , case = False),1 ,0)
+
+----------------------------------------------------------------------------------------------------------
+
+3 )  HOW TO REPLACE THE COLUMN NAME IN THE DATAFRAME
+
+payers.columns = payers.columns.str.replace('Id', 'PRIMARYPATIENTINSURANCEID')
+payers.head()
+
+---------------------------------------------------------------------------------------------------------------------------
+
+4) How to Map the categorical data
+
+Gender_map = {"2" : "Female" , 
+             "1": "Male" , 
+             "0" :  "UNKNOWN"}
+df1["PATIENT_GENDER"] = df1.PATIENT_GENDER.map(Gender_map)
+
+-----------------------------------------------------------------------------------------------------------------------
+______________________________________________________________________________________________________________________
+5) SEARCH IN STRING CONTAINS / STARTSWITH : -
+
+Contains: - StringList=['A', 'B')
+conditions[conditions['DESCRIPTION'].str.contains((StringPattern),case=False)]
+
+Startswith : - data.sex.str.startswith(("male"))
+
+----------------------------------------------------------------------------------------------------------------------------
+__________________________________________________________________________________________________________________________
+6) Groupby Aggregate Method  :-
+
+observation.groupby('CODE').aggregate({"DESCRIPTION":pd.Series.nunique}).sort_values(by = 'DESCRIPTION',ascending = False)
+
+7) lambda -- Method : -
+
+payers["a"].apply(lambda x: "less than one " if 0<x<1 else 'greater than one').value_counts(normalize = True)*100
+
+8)
+ a = pd.DataFrame(ss.inverse_transform(x_test), columns = x.columns)
+a["prediction"] = rf_new.predict(x_test)
+a["label"] = y_test.values
+a[a.prediction!=a.label].to_csv("x_test.csv")
+
+
+9)   STYLER : -
+a = x_train.head()
+a.style.applymap(lambda x: 'background-color : red' if x==0 else '')
+
+-----------------------------------------------------------------------------------------------
+
+10) PANDAS DATAFRAME REMOVE IN LIST / ADDING IN LIST : -
+
+patient_data['DESCRIPTION'] = patient_data['DESCRIPTION'].agg(lambda x: ','.join(map(str, x)))    ##Removing from list
+patient_data['DESCRIPTION'] = patient_data["DESCRIPTION"].apply(lambda x:x.split(","))              ##getting in list
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+11) sql function :->
+
+(SELECT * FROM <table_name> INNER JOIN (SELECT FLOOR(RAND() * @max := (SELECT MAX(id) FROM ALTH_DX_201904)) + 1 as rand) r on id > rand LIMIT <num_records>) UNION(SELECT * FROM <table_name> INNER JOIN (SELECT FLOOR(RAND() * @max) + 1 as rand) r on id > rand LIMIT <num_records>) UNION-- <repeat above query as per desired>(SELECT * FROM <table_name> INNER JOIN (SELECT FLOOR(RAND() * @max) + 1 as rand) r on id > rand LIMIT <num_records>);
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+12) unique_df1.groupby(["PLACE_OF_SERVICE"]).agg({"PROCEDURE_CODE": pd.Series.nunique})
+
+13) unique_df1.groupby(["PROCEDURE_CODE" , "PLACE_OF_SERVICE"]).count()
+
+14)  all_tables[all_tables.Tables_in_symphony.str.startswith("ALTH_RX")
+
+15) select * from ALTH_DX_201904 left join ALTH_DIAG_CCSR_CDE on ALTH_DX_201904.DIAGNOSIS_CODE = ALTH_DIAG_CCSR_CDE.DIAGNOSIS_CODE
+left join ALTH_PATIENT on ALTH_DX_201904.PATIENT_ID = ALTH_PATIENT.PATIENT_ID
+where ALTH_DIAG_CCSR_CDE.CCSR_CATEGORY IN ("BLD006","CIR001","CIR002","CIR003","CIR004","CIR005","CIR006","CIR007","CIR008","CIR009","CIR010","CIR011","CIR012","CIR013","CIR014","CIR015","CIR016","CIR017","CIR018","CIR019","CIR020","CIR021","CIR022","CIR023","CIR024","CIR025","CIR026","CIR027","CIR029","CIR030","CIR031","CIR032","CIR033","CIR034","CIR035","CIR036","CIR037","CIR038","END001","END002","END003","END007","END008","END009","END010","END011","END014","END015","EYE002","EYE003","GEN001","GEN003","MAL001","MAL004","MBD005","MBD018","MBD019","MBD020","MBD021","MBD022","MBD024","PRG005","PRG020","SYM012")
+limit 1000000;
+
+16)   select DISTINCT(ALTH_DX_201904.PATIENT_ID) from ALTH_DX_201904 left join ALTH_DIAG_CCSR_CDE on ALTH_DX_201904.DIAGNOSIS_CODE = ALTH_DIAG_CCSR_CDE.DIAGNOSIS_CODE
+left join ALTH_PATIENT on ALTH_DX_201904.PATIENT_ID = ALTH_PATIENT.PATIENT_ID
+where ALTH_DIAG_CCSR_CDE.CCSR_CATEGORY IN ("BLD006","CIR001","CIR002","CIR003","CIR004","CIR005","CIR006","CIR007","CIR008","CIR009","CIR010","CIR011","CIR012","CIR013","CIR014","CIR015","CIR016","CIR017","CIR018","CIR019","CIR020","CIR021","CIR022","CIR023","CIR024","CIR025","CIR026","CIR027","CIR029","CIR030","CIR031","CIR032","CIR033","CIR034","CIR035","CIR036","CIR037","CIR038","END001","END002","END003","END007","END008","END009","END010","END011","END014","END015","EYE002","EYE003","GEN001","GEN003","MAL001","MAL004","MBD005","MBD018","MBD019","MBD020","MBD021","MBD022","MBD024","PRG005","PRG020","SYM012") limit 100
+
+17)   data.duplicated(subset = ["PATIENT_ID"] , keep = "first").value_counts(normalize = True)*100
+
+18)   patient.groupby(["PATIENT_STATE"]).agg({"PATIENT_ZIP2": pd.Series})
+
+19)  SELECT ALTH_SX_.PATIENT_ID AS SX_PATIENT_ID, ALTH_SX_.PLAN_TYPE AS SX_PLAN_TYPE,
+ALTH_PX_201905.PATIENT_ID AS PX_PATIENT_ID , ALTH_PX_201905.PLAN_TYPE AS PX_PLAN_TYPE,
+ALTH_RX_201905.PATIENT_ID AS RX_PATIENT_ID, ALTH_PLAN.PLAN_ID, ALTH_PLAN.PLAN_TYPE AS RX_PLAN_TYPE
+  FROM   ALTH_SX_  , ALTH_PX_201905 , ALTH_RX_201905 
+  left join ALTH_PLAN on ALTH_PLAN.PLAN_ID = ALTH_RX_201905.PLAN_ID 
+  where ALTH_PX_201905.PATIENT_ID = ALTH_RX_201905.PATIENT_ID  AND
+   ALTH_RX_201905.PATIENT_ID = ALTH_SX_.PATIENT_ID
+
+ limit  100;
+
+20)   SELECT PATIENT_GENDER, COUNT(*), COUNT(*)* 100.0/ SUM(COUNT(*)) OVER () AS GENDER_DISTRIBUTION
+FROM ALTH_PATIENT
+GROUP BY PATIENT_GENDER
+ORDER BY 2 DESC;
+
+21) - select count(distinct ALTH_PATIENT.PATIENT_STATE)as Distinct_patient_state, COUNT(ALTH_PATIENT.PATIENT_STATE)as Distinct_patient_state
+-- from ALTH_PATIENT;
+
+22) SELECT PLAN_TYPE , COUNT(*)
+    FROM  ALTH_SX_
+    group by (PLAN_TYPE), PATIENT_ID HAVING COUNT(*)=1
+    ORDER BY 2 DESC
+
+23)   (SELECT '0-10' ,2022 - PATIENT_BIRTH_YEAR AS PATIENT_AGE, COUNT(CASE WHEN 2022 - PATIENT_BIRTH_YEAR BETWEEN 0 AND 10 THEN 2022 - PATIENT_BIRTH_YEAR ELSE NULL END) Total
+
+
+
+
+
+,COUNT(CASE WHEN 2022 - PATIENT_BIRTH_YEAR BETWEEN 0 AND 10 THEN 2022 - PATIENT_BIRTH_YEAR ELSE NULL END)*1.0/COUNT(2022 - PATIENT_BIRTH_YEAR) Percentage
+
+
+
+
+from ALTH_PATIENT)
+
+24) select count(distinct ALTH_PATIENT.PATIENT_STATE)as Distinct_patient_state, COUNT(ALTH_PATIENT.PATIENT_STATE) as Distinct_patient_state
+from ALTH_PATIENT;
+
+
+25) SELECT   DISTINCT(PATIENT_ID) , PLAN_TYPE,COUNT(*), COUNT(*)* 100.0/ sum(count(*))
+over () as PLAN_TYPE_PERCENTAGE_SX_TABLE
+FROM ALTH_SX_
+GROUP BY PLAN_TYPE
+ORDER BY 2 DESC;
+
+
+26) SELECT ALTH_SX_.PATIENT_ID AS SX_PATIENT_ID, ALTH_SX_.PLAN_TYPE AS SX_PLAN_TYPE,
+ALTH_PX_201905.PATIENT_ID AS PX_PATIENT_ID , ALTH_PX_201905.PLAN_TYPE AS PX_PLAN_TYPE,
+ALTH_RX_201905.PATIENT_ID AS RX_PATIENT_ID, ALTH_PLAN.PLAN_ID, ALTH_PLAN.PLAN_TYPE AS RX_PLAN_TYPE
+  FROM   ALTH_SX_  , ALTH_PX_201905 , ALTH_RX_201905 
+  left join ALTH_PLAN on ALTH_PLAN.PLAN_ID = ALTH_RX_201905.PLAN_ID 
+  where ALTH_PX_201905.PATIENT_ID = ALTH_RX_201905.PATIENT_ID  AND
+   ALTH_RX_201905.PATIENT_ID = ALTH_SX_.PATIENT_ID
+
+ limit  100;
+
+
+27)   SELECT PATIENT_GENDER, COUNT(*), COUNT(*)* 100.0/ SUM(COUNT(*)) OVER () AS GENDER_DISTRIBUTION
+FROM ALTH_PATIENT
+GROUP BY PATIENT_GENDER
+ORDER BY 2 DESC;
+
+
+28) - select count(distinct ALTH_PATIENT.PATIENT_STATE)as Distinct_patient_state, COUNT(ALTH_PATIENT.PATIENT_STATE)as Distinct_patient_state
+-- from ALTH_PATIENT;
+
+
+29) SELECT PLAN_TYPE , COUNT(*)
+    FROM  ALTH_SX_
+    group by (PLAN_TYPE), PATIENT_ID HAVING COUNT(*)=1
+    ORDER BY 2 DESC
+
+30) select count(distinct ALTH_PATIENT.PATIENT_STATE)as Distinct_patient_state, COUNT(ALTH_PATIENT.PATIENT_STATE) as Distinct_patient_state
+from ALTH_PATIENT;
+
+
+31)  SELECT   DISTINCT(PATIENT_ID) , PLAN_TYPE,COUNT(*), COUNT(*)* 100.0/ sum(count(*))
+over () as PLAN_TYPE_PERCENTAGE_SX_TABLE
+FROM ALTH_SX_
+GROUP BY PLAN_TYPE
+ORDER BY 2 DESC;
+
+
+32)  SELECT DISTINCT(ALTH_RX_201904.PATIENT_ID),ALTH_RX_201904.DRUG_ID AS RX_DRUG_ID, ALTH_DIAG_CCSR_CDE.DIAGNOSIS_CODE,
+ALTH_DIAG_CCSR_CDE.CCSR_CATEGORY,ALTH_DIAG_CCSR_CDE.DIAGNOSIS_DESCRIPTION,
+ALTH_DRUG.DRUG_ID AS DRUG_ID , ALTH_DRUG.DRUG_NAME AS DRUG_NAME FROM ALTH_DX_201904, ALTH_RX_201904, ALTH_DIAG_CCSR_CDE , ALTH_DRUG
+WHERE ALTH_DX_201904.PATIENT_ID = ALTH_RX_201904.PATIENT_ID AND
+ALTH_DIAG_CCSR_CDE.DIAGNOSIS_CODE = ALTH_DX_201904.DIAGNOSIS_CODE AND ALTH_DRUG.DRUG_ID=ALTH_RX_201904.DRUG_ID AND
+ALTH_DIAG_CCSR_CDE.CCSR_CATEGORY IN
+("BLD006","CIR001","CIR002","CIR003","CIR004","CIR005","CIR006","CIR007","CIR008","CIR009","CIR010","CIR011","CIR012","CIR013","CIR014","CIR015","CIR016","CIR017","CIR018","CIR019","CIR020","CIR021","CIR022","CIR023","CIR024","CIR025","CIR026","CIR027","CIR029","CIR030","CIR031","CIR032","CIR033","CIR034","CIR035","CIR036","CIR037","CIR038","END001","END002","END003","END007","END008","END009","END010","END011","END014","END015","EYE002","EYE003","GEN001","GEN003","MAL001","MAL004","MBD005","MBD018","MBD019","MBD020","MBD021","MBD022","MBD024","PRG005","PRG020","SYM012")
+
+
+33) num_columns = df_train.select_dtypes(exclude="object").columns
+df_train[num_columns ]= df_train[num_columns ].fillna(df_train[num_columns ].median())
+
+
+
+
+
+df_test[num_columns ]= df_test[num_columns ].fillna(df_train[num_columns ].median())
+
+
+34)   SELECT '0-5' PATIENT_BIRTH_YEAR, COUNT(CASE WHEN 2022 - PATIENT_BIRTH_YEAR BETWEEN 0 AND 5 THEN 2022 - PATIENT_BIRTH_YEAR ELSE NULL END) Total
+
+
+
+
+
+ ,COUNT(CASE WHEN 2022 - PATIENT_BIRTH_YEAR BETWEEN 0 AND 5 THEN 2022 - PATIENT_BIRTH_YEAR ELSE NULL END)*100/sum(count(2022 - PATIENT_BIRTH_YEAR)) over () as Percentage
+                                                                                         
+
+
+
+
+from ALTH_PATIENT
+union
+SELECT '5-10' PATIENT_BIRTH_YEAR, COUNT(CASE WHEN 2022 - PATIENT_BIRTH_YEAR BETWEEN 5 AND 10 THEN 2022 - PATIENT_BIRTH_YEAR ELSE NULL END) Total
+
+
+
+
+ ,COUNT(CASE WHEN 2022 - PATIENT_BIRTH_YEAR BETWEEN 5 AND 10 THEN 2022 - PATIENT_BIRTH_YEAR ELSE NULL END)*100/sum(count(2022 - PATIENT_BIRTH_YEAR)) over () as Percentage
+                                                                                         
+
+
+
+
+from ALTH_PATIENT
+
+
+
+35)   CASE WHEN
+
+
+
+
+SELECT
+   ALTH_DX_201905.PATIENT_ID, ALTH_DX_201905.SERVICE_DATE , ALTH_DX_201905.DIAGNOSIS_CODE ,ALTH_DIAG_CDE.*,
+   CASE WHEN ALTH_DIAG_CDE.DIAGNOSIS_DESCRIPTION REGEXP "HEART" THEN 'HEART PATIENT' ELSE 'NON HEART PATIENT' END AS
+   PATIENT
+FROM ALTH_DX_201905, ALTH_DIAG_CDE ;
+
+
+
+36)  DATE DIFFRENCE FUNCTION
+
+
+
+
+SELECT  ALTH_DX_201905.*, DATEDIFF(SYSDATE(), SERVICE_DATE) AS DATE_DIFFRENCE FROM ALTH_DX_201905
+
+
+
+
+
+37)  SELECTING THE DATE , MONTH, YEAR
+
+
+
+
+
+
+a)   SELECT DAY(SERVICE_DATE)AS DAY , ALTH_DX_201905.* FROM ALTH_DX_201905
+
+
+b)   SELECT QUARTER(SERVICE_DATE)AS QUARTER , ALTH_DX_201905.* FROM ALTH_DX_201905
+
+
+c)    SELECT SUBDATE('2017-05-15' , INTERVAL 2 DAY) ,  ADDDATE('2017-05-15' , INTERVAL 2 DAY)
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+38)  ## starts with abc
+
+select * from ALTH_DIAG_CDE
+
+WHERE ALTH_DIAG_CDE.DIAGNOSIS_DESCRIPTION REGEXP '^[a-c]'
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+39)    SELECT ALTH_RX_201905.* ,
+CASE WHEN PLAN_PAY>PATIENT_PAY THEN 'REFIL_IN_TIME' ELSE 'REFIL_NOT_IN_TIME' END AS REFIL
+FROM ALTH_RX_201905
+HAVING REFIL = 'REFIL_NOT_IN_TIME'
+
+
+40)   SELECT * FROM ALTH_RX_201905, ALTH_PLAN , ALTH_DRUG
+WHERE ALTH_PLAN.PLAN_ID = ALTH_RX_201905.PLAN_ID
+AND PLAN_TYPE ='PBM' AND ALTH_DRUG.DRUG_ID = ALTH_RX_201905.DRUG_ID
+
+
+
+41)    SELECT PATIENT_ID, DRUG_ID , DATEDIFF(MAX(RX_FILL_DATE) , RX_FILL_DATE) AS DATE_DIFFRENCE , RX_FILL_DATE   FROM ALTH_RX_201904  
+GROUP BY PATIENT_ID, DRUG_ID
+ORDER BY PATIENT_ID, DRUG_ID DESC;
+
+
+
+
+42)   AVG_DELAY = pd.NamedAgg("AVG_DELAY" , lambda x : np.around(x.iloc[0], 1))).reset_index()
+
+43) x = data[["PATIENT_ID","CNTY_FIPS"]].explode("CNTY_FIPS").groupby("PATIENT_ID")["CNTY_FIPS"].agg(pd.Series.mode).to_frame()
+data = data.drop("CNTY_FIPS",axis=1).merge(x.reset_index(),how="left")
+
+
+
+44)   df['LIST_OF_DRUG_COST'] = df[["LIST_OF_PATIENT_PAY", "LIST_OF_PLAN_PAY"]].apply(lambda x: list(map(add,x[0],x[1])), axis = 1)
+# df['AVG_DRUG_COST'] = df["LIST_OF_DRUG_COST"].map(lambda x: sum(x)/len(x))
+
+
+
+45)   import pickle
+pickle.dump(df2, open("/home/rsingh/PBM/5lack_patient/rx1", "wb"))
+
+
+46)   data = pickle.load(open("/home/rsingh/PBM/5lack_patient/rx1",'rb'))
+
+
+47)   ## LAMBDA IF ELSE IF:----------->
+
+display((dataframe.MPR.apply(lambda x: 'Greater_Than_100' if x>100 else 'Equal_To_Hundered' if x==0 else "Less_Than_100").value_counts(normalize = True)*100).reset_index().rename(columns = {'MPR':'MPR%'}))
+
+
+48)   admissions["all_current_procedures"] = admissions["all_current_procedures"].fillna("").apply(list)
+admissions["all_previous_procedure"] = admissions["all_previous_procedure"].fillna("").apply(list)
+admissions["all_procedure_till_date"] = admissions.apply(lambda x : list(x["all_previous_procedure"])+list(x["all_current_procedures"]),axis=1)
+
+
+49)   df1["dictionary"] = df1.apply(lambda x : dict(zip(x["all_procedure_till_date"],x["all_procedure_critic_status"])),axis=1)
+
+50)   df1['high_critical_procedures'] = df1.apply(lambda x: [x  for x in x['all_procedure_till_date'] if x in High], axis =1 )
+
+
+51)    DICTIONARY IN PANDAS DATAFRAME :----------->
+
+ 
+
+df = data.groupby("subject_id").progress_apply(lambda x : dict(zip(list(x["ckd_stage"]) ,list(x["admittime"])))).reset_index().rename(columns = {0:"stage_dict"})
+df['Max_stage'] = df.progress_apply(lambda x: max(x['stage_dict'].keys()), axis =1)
+df['Max_stage_time'] = df.progress_apply(lambda x : x['stage_dict'][x['Max_stage']], axis =1)
+
+
+
+52)   critic_data['critic_status']=critic_data['CCSR Category'].apply(lambda x: 'Low' if x in(Low) else 'Medium' if x in(Medium) else "High")
+
+____---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SQL QUERIES  : -
+
+1) Count & Percentage of  State 
+
+SELECT PATIENT_STATE,COUNT(*), COUNT(*)* 100.0/ sum(count(*)) over () as state_percentages
+FROM ALTH_PATIENT 
+GROUP BY PATIENT_STATE
+ORDER BY 2 DESC;
+
+-----------------------------------------------
+
+2) Find the Drug Name Of   the  Heart Patient 
+by using the where clause
+
+
+SELECT DISTINCT(ALTH_RX_201904.PATIENT_ID), ALTH_DRUG.DRUG_ID ,ALTH_DIAG_CCSR_CDE.DIAGNOSIS_CODE,
+ALTH_DIAG_CCSR_CDE.CCSR_CATEGORY,ALTH_DIAG_CCSR_CDE.DIAGNOSIS_DESCRIPTION,
+ ALTH_DRUG.DRUG_NAME FROM ALTH_DX_201904, ALTH_RX_201904, ALTH_DIAG_CCSR_CDE , ALTH_DRUG
+WHERE ALTH_DX_201904.PATIENT_ID = ALTH_RX_201904.PATIENT_ID AND
+ALTH_DIAG_CCSR_CDE.DIAGNOSIS_CODE = ALTH_DX_201904.DIAGNOSIS_CODE AND ALTH_DRUG.DRUG_ID=ALTH_RX_201904.DRUG_ID AND
+ALTH_DIAG_CCSR_CDE.CCSR_CATEGORY IN
+("BLD006","CIR001","CIR002","CIR003","CIR004","CIR005","CIR006","CIR007","CIR008","CIR009","CIR010","CIR011","CIR012","CIR013","CIR014","CIR015","CIR016","CIR017","CIR018","CIR019","CIR020","CIR021","CIR022","CIR023","CIR024","CIR025","CIR026","CIR027","CIR029","CIR030","CIR031","CIR032","CIR033","CIR034","CIR035","CIR036","CIR037","CIR038","END001","END002","END003","END007","END008","END009","END010","END011","END014","END015","EYE002","EYE003","GEN001","GEN003","MAL001","MAL004","MBD005","MBD018","MBD019","MBD020","MBD021","MBD022","MBD024","PRG005","PRG020","SYM012")
+
+---------------------------------------------------
+
+Find the Drug name , Drug_id , Surgical code , Surgical Code Description , Procedure code , Procedure Code  Descriptin
+
+SELECT DISTINCT(ALTH_RX_201904.PATIENT_ID), ALTH_DRUG.DRUG_ID , 
+ ALTH_DRUG.DRUG_NAME,ALTH_SX_.SURGICAL_CODE , ALTH_SRGCL_CDE.SURGICAL_DESCRIPTION , ALTH_PX_201904.PROCEDURE_CODE,
+ ALTH_PRCDR_CDE.PROCEDURE_DESCRIPTION
+ FROM ALTH_DX_201904, ALTH_RX_201904, ALTH_DIAG_CCSR_CDE , ALTH_DRUG, ALTH_SX_, ALTH_SRGCL_CDE, ALTH_PX_201904,
+ ALTH_PRCDR_CDE
+WHERE ALTH_DX_201904.PATIENT_ID = ALTH_RX_201904.PATIENT_ID AND
+ALTH_DIAG_CCSR_CDE.DIAGNOSIS_CODE = ALTH_DX_201904.DIAGNOSIS_CODE AND ALTH_DRUG.DRUG_ID=ALTH_RX_201904.DRUG_ID AND
+ALTH_DX_201904.PATIENT_ID=ALTH_SX_.PATIENT_ID AND
+ALTH_SRGCL_CDE.SURGICAL_CODE AND
+ALTH_PX_201904.PROCEDURE_CODE= ALTH_PRCDR_CDE.PROCEDURE_CODE AND
+ALTH_DIAG_CCSR_CDE.CCSR_CATEGORY IN
+("BLD006","CIR001","CIR002","CIR003","CIR004","CIR005","CIR006","CIR007","CIR008","CIR009","CIR010","CIR011","CIR012","CIR013","CIR014","CIR015","CIR016","CIR017","CIR018","CIR019","CIR020","CIR021","CIR022","CIR023","CIR024","CIR025","CIR026","CIR027","CIR029","CIR030","CIR031","CIR032","CIR033","CIR034","CIR035","CIR036","CIR037","CIR038","END001","END002","END003","END007","END008","END009","END010","END011","END014","END015","EYE002","EYE003","GEN001","GEN003","MAL001","MAL004","MBD005","MBD018","MBD019","MBD020","MBD021","MBD022","MBD024","PRG005","PRG020","SYM012")
+
+
+-------------------------------------------------
+
+3 ) Find the Heart Patient in the database 
+
+select DISTINCT(ALTH_DX_201904.PATIENT_ID) from ALTH_DX_201904 left join ALTH_DIAG_CCSR_CDE on ALTH_DX_201904.DIAGNOSIS_CODE = ALTH_DIAG_CCSR_CDE.DIAGNOSIS_CODE
+left join ALTH_PATIENT on ALTH_DX_201904.PATIENT_ID = ALTH_PATIENT.PATIENT_ID
+where ALTH_DIAG_CCSR_CDE.CCSR_CATEGORY IN ("BLD006","CIR001","CIR002","CIR003","CIR004","CIR005","CIR006","CIR007","CIR008","CIR009","CIR010","CIR011","CIR012","CIR013","CIR014","CIR015","CIR016","CIR017","CIR018","CIR019","CIR020","CIR021","CIR022","CIR023","CIR024","CIR025","CIR026","CIR027","CIR029","CIR030","CIR031","CIR032","CIR033","CIR034","CIR035","CIR036","CIR037","CIR038","END001","END002","END003","END007","END008","END009","END010","END011","END014","END015","EYE002","EYE003","GEN001","GEN003","MAL001","MAL004","MBD005","MBD018","MBD019","MBD020","MBD021","MBD022","MBD024","PRG005","PRG020","SYM012")
+limit 100
+
+-------------------------------------------------
+
+4)Plan type is diffrent  for px, rx, sx table :- 
+
+SELECT ALTH_SX_.PATIENT_ID AS SX_PATIENT_ID, ALTH_SX_.PLAN_TYPE AS SX_PLAN_TYPE,
+ALTH_PX_201905.PATIENT_ID AS PX_PATIENT_ID , ALTH_PX_201905.PLAN_TYPE AS PX_PLAN_TYPE,
+ALTH_RX_201905.PATIENT_ID AS RX_PATIENT_ID, ALTH_PLAN.PLAN_ID, ALTH_PLAN.PLAN_TYPE AS RX_PLAN_TYPE
+  FROM   ALTH_SX_  , ALTH_PX_201905 , ALTH_RX_201905 
+  left join ALTH_PLAN on ALTH_PLAN.PLAN_ID = ALTH_RX_201905.PLAN_ID 
+  where ALTH_PX_201905.PATIENT_ID = ALTH_RX_201905.PATIENT_ID  AND
+   ALTH_RX_201905.PATIENT_ID = ALTH_SX_.PATIENT_ID
+
+ limit  100;
+
+
+-----------------------------------------------
+
+
+5)  DISTINCT/UNIQUE COUNT OF THE PATIENT
+
+- select count(distinct ALTH_PATIENT.PATIENT_STATE)as Distinct_patient_state, COUNT(ALTH_PATIENT.PATIENT_STATE)as Distinct_patient_state
+-- from ALTH_PATIENT;
+
+
+---------------------------------------------
+
+6) By taking the unique patient_id count the plan_type
+
+SELECT PLAN_TYPE, COUNT(DISTINCT PATIENT_ID, PLAN_TYPE) AS PLAN_COUNT , 
+COUNT(DISTINCT PATIENT_ID, PLAN_TYPE)*100.0/SUM(COUNT(DISTINCT PATIENT_ID, PLAN_TYPE)) OVER () AS PLAN_TYPE_PERCENTAGE
+FROM ALTH_PX_201904
+GROUP BY PLAN_TYPE
+ORDER BY 2 DESC
+--------------------------------------------------------
+
+7) Patient Age Distribution in the Form of the Bin 
+
+SELECT '0-5' PATIENT_BIRTH_YEAR, COUNT(CASE WHEN 2022 - PATIENT_BIRTH_YEAR BETWEEN 0 AND 5 THEN 2022 - PATIENT_BIRTH_YEAR ELSE NULL END) Total
+
+  ,COUNT(CASE WHEN 2022 - PATIENT_BIRTH_YEAR BETWEEN 0 AND 5 THEN 2022 - PATIENT_BIRTH_YEAR ELSE NULL END)*100/sum(count(2022 - PATIENT_BIRTH_YEAR)) over () as Percentage
+                                                                                         
+
+ from ALTH_PATIENT
+ union
+SELECT '5-10' PATIENT_BIRTH_YEAR, COUNT(CASE WHEN 2022 - PATIENT_BIRTH_YEAR BETWEEN 5 AND 10 THEN 2022 - PATIENT_BIRTH_YEAR ELSE NULL END) Total
+
+  ,COUNT(CASE WHEN 2022 - PATIENT_BIRTH_YEAR BETWEEN 5 AND 10 THEN 2022 - PATIENT_BIRTH_YEAR ELSE NULL END)*100/sum(count(2022 - PATIENT_BIRTH_YEAR)) over () as Percentage
+                                                                                         
+
+ from ALTH_PATIENT
+
+8)   Delete this
+
+
+SELECT ALTH_DX_201904.PATIENT_ID,ALTH_DX_201904.SERVICE_DATE, ALTH_DX_201904.CLAIM_TYPE, 
+ALTH_DIAG_CCSR_CDE.DIAGNOSIS_DESCRIPTION , ALTH_PX_201904.PROCEDURE_CODE , 
+ ALTH_PRCDR_CDE.PROCEDURE_DESCRIPTION 
+FROM  ALTH_DX_201904 , ALTH_RX_201904, ALTH_PX_201904, ALTH_PRCDR_CDE , ALTH_DIAG_CCSR_CDE
+WHERE ALTH_DX_201904.PATIENT_ID IN(348193934,
+ 250987340,
+ 401058005,
+ 231612836,
+ 161006343,
+ 270885169,
+ 175728990,
+ 240932715,
+ 131372797,
+ 1717804016,
+ 117648082,
+ 234698551,
+ 377466912,
+ 532417187,
+ 111294198,
+ 274051172,
+ 129224708,
+ 636780791,
+ 183729114,
+ 468034910,
+ 161006343,
+ 235565681,
+ 522087025,
+ 263699434,
+ 224513025,
+ 194485308,
+ 200163123,
+ 224513025,
+ 421243581,
+ 552322590,
+ 547983735,
+ 125394031,
+ 390827012,
+ 558089971,
+ 227981257,
+ 229134218,
+ 145814057,
+ 236065369,
+ 153868151,
+ 212042977,
+ 566712500,
+ 188362700,
+ 344790789,
+ 337526134,
+ 126433852,
+ 111612912,
+ 538936027,
+ 132685517,
+ 234155195,
+ 341816679)  AND
+ALTH_PRCDR_CDE.PROCEDURE_CODE = ALTH_PX_201904.PROCEDURE_CODE 
+AND ALTH_PX_201904.PROCEDURE_CODE IN('G9309', 'G9310') AND 
+ALTH_DIAG_CCSR_CDE.DIAGNOSIS_CODE = ALTH_DX_201904.DIAGNOSIS_CODE
+
+
+9)   DATE DIFFRENCE  FUNCTION
+
+        SELECT DATEDIFF(SYSDATE() , SERVICE_DATE) AS DATE_DIFFRENCE FROM ALTH_DX_201905
+
+10)  SELECTING THE DATE , MONTH, YEAR 
+     SELECT DAY(SERVICE_DATE)AS DAY , ALTH_DX_201905.* FROM ALTH_DX_201905
+     SELECT QUARTER(SERVICE_DATE)AS QUARTER , ALTH_DX_201905.* FROM ALTH_DX_201905
+
+11)  INTERVAL  OF  DATE
+       SELECT SUBDATE('2017-05-15' , INTERVAL 2 DAY) ,  ADDDATE('2017-05-15' , INTERVAL 2 DAY)
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+
+PANDAS
+
+1) if the value is less than zero convert it into an nan
+
+df1['Current_Patient_Age']  = np.where(df1["Current_Patient_Age"]<0 , np.nan , df1['Current_Patient_Age'] ) 
+
+
+2) How to check the duplicate value and drop it 
+
+df1.duplicated(subset=["PATIENT_ID"]).value_counts(normalize = True)
+df1.drop_duplicates(subset = ["PATIENT_ID"] , keep = "first" , inplace = True)
+
+
+
+----------------------------------------------------------------------------------
+
+Machine learning : -
+1) feature selection : -
+def plot_feature_importance(importance,names,model_type):
+
+    #Create arrays from feature importance and feature names
+    feature_importance = np.array(importance)
+    feature_names = np.array(names)
+
+    #Create a DataFrame using a Dictionary
+    data={'feature_names':feature_names,'feature_importance':feature_importance}
+    fi_df = pd.DataFrame(data)
+
+    #Sort the DataFrame in order decreasing feature importance
+    fi_df.sort_values(by=['feature_importance'], ascending=False,inplace=True)
+
+    #Define size of bar plot
+    plt.figure(figsize=(10,8))
+    #Plot Searborn bar chart
+    sns.barplot(x=fi_df['feature_importance'], y=fi_df['feature_names'])
+    #Add chart labels
+    plt.title(model_type + 'FEATURE IMPORTANCE')
+    plt.xlabel('FEATURE IMPORTANCE')
+    plt.ylabel('FEATURE NAMES')
+
+or 
+sss
+imp_df = pd.DataFrame({'feature': x.columns.values,
+                       'importance': xgb.feature_importances_}).sort_values(by = 'importance', ascending = False)
+imp_df
+
+2)   CALCULATE MEAN FROM TEST  DATA AND USE IT IN TRAIN  DATA 
+ num_columns = df_train.select_dtypes(exclude="object").columns
+df_train[num_columns ]= df_train[num_columns ].fillna(df_train[num_columns ].select_dtypes(exclude="object").median())
+
+df_test[num_columns ]= df_test[num_columns ].fillna(df_train[num_columns ].select_dtypes(exclude="object").median()
+

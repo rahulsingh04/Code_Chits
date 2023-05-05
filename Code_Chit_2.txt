@@ -1,0 +1,288 @@
+1)  import statistics
+    df2 = df2.merge(df2.groupby('PatientId').agg(
+    COUNTY_FIPS = pd.NamedAgg('cnty_fips', lambda x: statistics.mode(list(x)))).reset_index(), on = 'PatientId')
+
+2)   icd_9_10_pcs = dict(zip(icd_9_10_pcs['icd9cm'].astype(str) , icd_9_10_pcs['icd10cm']))
+
+3)   icd_9_10_cm = dict(zip(icd_9_10_cm['icd9cm'].astype(str), icd_9_10_cm['icd10cm']))
+
+4)   def convert(x,cm = True):
+    if cm:
+        try:
+            #p = str(int(x)) if x.isdigit() else x
+            p = x
+            return icd_9_10_cm[p]
+        except KeyError:
+            return None
+    else:
+        try:
+            p = str(int(x)) if x.isdigit() else x
+            return icd_9_10_pcs[p]
+        except KeyError:
+            return None
+
+
+5)  d_codes["icd10"] = d_codes.apply(lambda x : convert(x.icd_code) if x.icd_version == 9 else x.icd_code, axis=1)#.isna().sum()
+    p_codes["icd10"] = p_codes.apply(lambda x : convert(x.icd_code,cm=False) if x.icd_version == 9 else x.icd_code, axis=1)#.isna().sum()
+
+
+6)  d_codes["ccsr_category"] = d_codes["icd10"].map(dict(zip(ccsr_cats_diag["ICD-10-CM Code"],ccsr_cats_diag["CCSR Category"])))
+    d_codes["ccsr_category_description"] = d_codes["icd10"].map(dict(zip(ccsr_cats_diag["ICD-10-CM Code"],ccsr_cats_diag["CCSR Category Description"])))
+    p_codes["ccsr_category"] = p_codes["icd10"].map(dict(zip(ccsr_cats_proc["ICD-10-PCS Code"],ccsr_cats_proc["CCSR Category"])))
+    p_codes["ccsr_category_description"] = p_codes["icd10"].map(dict(zip(ccsr_cats_proc["ICD-10-PCS Code"],ccsr_cats_proc["CCSR Category Description"])))
+
+
+
+7)  admissions['readmission_in_days'] = admissions.groupby('subject_id').progress_apply(lambda x: x['admittime'].diff().dt.days - x['LOS'].shift(1)).reset_index(level=0, drop = True)
+
+    admissions["next_admission_type"] = admissions.groupby("subject_id")["admission_type"].shift(-1)
+
+
+
+8)  	diags_group = diags.groupby('subject_id')
+	def fun(x):
+    	g = diags_group.get_group(x['subject_id'])
+    	return g[g['dischtime'] < x['dischtime']]['ccsr_category'].unique()
+	admissions['all_previous_diagnosis'] = admissions.progress_apply(fun, axis =1)
+
+
+9)     	diags_group = diags.groupby("hadm_id")
+	def fun(x):
+    	try : 
+        	return diags_group.get_group(x["hadm_id"])["ccsr_category"].unique()
+    	except KeyError:
+        	return np.NaN
+	admissions["all_current_diagnosis"] = admissions.progress_apply( fun, axis=1)
+
+
+
+10)   a.columns = ["PREVIOUS_DIAGNOSIS_"+x if x!="hadm_id"  else x for x in a.columns]
+
+
+
+11)  ##  MAX LENGTH OF STAY BEFORE TODAY : ---
+
+diags_group = admissions.groupby('subject_id')
+def fun(x):
+    g = diags_group.get_group(x['subject_id'])
+    return g[g['admittime'] < x['admittime']]['LOS'].max()
+admissions['max_length_of_stay_before_today'] = admissions.progress_apply(fun, axis =1)
+admissions = admissions.sort_values(by=['subject_id','admittime'], ascending = False).reset_index().drop('index', axis =1)
+
+
+12)  ## average length of stay before today 
+
+diags_group = admissions.groupby('subject_id')
+def fun(x):
+    g = diags_group.get_group(x['subject_id'])
+    return g[g['admittime'] < x['admittime']]['LOS'].mean()
+admissions['avg_length_of_stay_before_today'] = admissions.progress_apply(fun, axis =1)
+admissions = admissions.sort_values(by=['subject_id','admittime']).reset_index().drop('index', axis =1)
+
+
+
+
+13) ## number of hospital admission per year 
+## total_number of admission per year before today : -
+
+diags_group = admissions.groupby('subject_id')
+def fun(x):
+    g = diags_group.get_group(x['subject_id'])
+    return g[g['admittime'] < x['admittime']].admission_type.count()
+admissions['total_no_of_admission_per_year_before_today'] = admissions.progress_apply(fun, axis =1)
+
+diags_group = admissions.groupby('subject_id')
+def fun(x):
+    g = diags_group.get_group(x['subject_id'])
+    return g[g['admittime'] < x['admittime']].admittime.max()
+admissions['max_total_no_of_admission_per_year_before_today'] = admissions.progress_apply(fun, axis =1)
+
+diags_group = admissions.groupby('subject_id')
+def fun(x):
+    g = diags_group.get_group(x['subject_id'])
+    return g[g['admittime'] < x['admittime']].admittime.min()
+admissions['min_total_no_of_admission_per_year_before_today'] = admissions.progress_apply(fun, axis =1)
+
+
+admissions = admissions.sort_values(by=['subject_id','admittime']).reset_index().drop('index', axis =1)
+
+admissions = admissions.assign(year = lambda x: pd.to_datetime(x.max_total_no_of_admission_per_year_before_today).dt.year - pd.to_datetime(x.min_total_no_of_admission_per_year_before_today).dt.year)
+admissions = admissions.assign(total_no_of_admission_per_year_before_today = lambda x: x.total_no_of_admission_per_year_before_today/x.year).drop('max_total_no_of_admission_per_year_before_today	min_total_no_of_admission_per_year_before_today	year'.split(), axis = 1 )
+
+
+
+14) diags_group = admissions.groupby('subject_id')
+def fun(x):
+    g = diags_group.get_group(x['subject_id'])
+    data = g[g['admittime'] < x['admittime']]
+    return data[data.admission_type.str.contains('EMER|URGENT', case = False)].admission_type.count()
+                
+admissions['emergency_count'] = admissions.progress_apply(fun, axis =1)
+
+
+
+15)  ### total_length_of_stay_per_year before today
+diags_group = admissions.groupby('subject_id')
+def fun(x):
+    g = diags_group.get_group(x['subject_id'])
+    return g[g['admittime'] < x['admittime']]['LOS'].sum()
+admissions['sum_length_of_stay_before_today'] = admissions.progress_apply(fun, axis =1)
+admissions = admissions.sort_values(by=['subject_id','admittime'], ascending = False).reset_index().drop('index', axis =1)
+
+
+
+16)  # ADDING  OF THE RISK FACTOR : -
+from hccpy.hcc import HCCEngine
+he = HCCEngine()
+
+
+17)  admissions["previous_risk_score"] = admissions.apply(lambda x : he.profile(x["all_previous_diagnosis_icd"],age=x["AGE_AT_TIME_OF_ADMISSION"],sex=x["gender"])["risk_score"],axis=1)
+
+
+
+18)  admissions['sum_of_readmission'] = admissions.groupby('subject_id')['readmission_in_days'].cumsum()
+     admissions['count_of_admission'] = admissions.groupby('subject_id')['readmission_in_days'].cumcount()  
+
+
+19) def fun(x):
+    if x["is_ckd_diagnosed"]:
+        return x["chartdate"]<x["ckd_diagnosed_date"]
+    else :
+        return True
+procedures2 = procedures2[procedures2.progress_apply(fun,axis=1)]
+
+
+20)  df2['count_of_high_procedure'] = df2['lists'].apply(lambda x: x.count('High'))
+     df2['count_of_Medium_procedure'] = df2['lists'].apply(lambda x: x.count('Medium'))
+     df2['count_of_Low_procedure'] = df2['lists'].apply(lambda x: x.count('Low'))
+
+
+21)  critic_data['critic_status']=critic_data['CCSR Category'].apply(lambda x: 'Low' if x in(Low) else 'Medium' if x in(Medium) else "High")
+
+
+22)  def vif_score(x):
+    scaler = StandardScaler()
+    arr = scaler.fit_transform(x)
+    return pd.DataFrame([[x.columns[i] , variance_inflation_factor(arr,i)] for i in range(arr.shape[1])], columns = ["FEATURE" , "VARIANCE_INFLATION_FACTOR"]).sort_values(by='VARIANCE_INFLATION_FACTOR', ascending = False).reset_index(drop = True)
+
+
+23) def print_score(clf, X_train, y_train, X_test, y_test, train=True):
+    if train:
+        pred = clf.predict(X_train)
+        clf_report = pd.DataFrame(classification_report(y_train, pred, output_dict=True))
+        print("Train Result:\n================================================")
+        print(f"Accuracy Score: {accuracy_score(y_train, pred) * 100:.2f}%")
+        print("_______________________________________________")
+        print(f"CLASSIFICATION REPORT:\n{clf_report}")
+        print("_______________________________________________")
+        ConfusionMatrixDisplay.from_predictions(y_train, pred) 
+        plt.show()
+        
+    elif train==False:
+        pred = clf.predict(X_test)
+        clf_report = pd.DataFrame(classification_report(y_test, pred, output_dict=True))
+        print("Test Result:\n================================================")        
+        print(f"Accuracy Score: {accuracy_score(y_test, pred) * 100:.2f}%")
+        print("_______________________________________________")
+        print(f"CLASSIFICATION REPORT:\n{clf_report}")
+        print("_______________________________________________")
+        ConfusionMatrixDisplay.from_predictions(y_test, pred) 
+        plt.show()
+
+
+
+24)  def plot_feature_importance(importance,names,model_type):
+
+    #Create arrays from feature importance and feature names
+    feature_importance = np.array(importance)
+    feature_names = np.array(names)
+
+    #Create a DataFrame using a Dictionary
+    data={'feature_names':feature_names,'feature_importance':feature_importance}
+    fi_df = pd.DataFrame(data).head(50)
+
+    #Sort the DataFrame in order decreasing feature importance
+    fi_df.sort_values(by=['feature_importance'], ascending=False,inplace=True)
+
+    #Define size of bar plot
+    plt.figure(figsize=(10,20))
+    #Plot Searborn bar chart
+    sns.barplot(x=fi_df['feature_importance'], y=fi_df['feature_names'])
+    plt.grid('-')
+    #Add chart labels
+    plt.title(model_type + 'FEATURE IMPORTANCE')
+    plt.xlabel('FEATURE IMPORTANCE')
+    plt.ylabel('FEATURE NAMES')
+
+
+
+25)   
+
+import time
+t1 = time.time()
+import xgboost as xgb
+from xgboost import XGBClassifier
+xgb = XGBClassifier(n_estimators = 3000 , max_depth = 3, tree_method = "gpu_hist",
+           eval_metric = "logloss", reg_alpha =45, reg_lambda=220, subsample=0.78 , max_leaves =5, 
+                   colsample_bytree =0.40, colsample_bylevel = 0.40 , 
+                   colsample_bynode=0.40 , eta = 0.40,  min_child_weight=5,
+                    scale_pos_weight= 3, random_state=100 , n_jobs= 27 , num_parallel_tree=5,
+                   gpu_id=0)
+xgb.fit(x_train, y_train)
+t2 = time.time()   
+t=(t2-t1)/60
+print('Total Time Taken',str(t))
+
+
+26)  ### MAKING DICTIONARY :->
+df = data[~data.ckd_stage.isna()].groupby("subject_id").progress_apply(lambda x : dict(zip(list(x["ckd_stage"]) ,list(x["admittime"])))).reset_index().rename(columns = {0:"stage_dict"})
+df['Max_stage'] = df.progress_apply(lambda x: max(x['stage_dict'].keys()), axis =1)
+df['Max_stage_time'] = df.progress_apply(lambda x : x['stage_dict'][x['Max_stage']], axis =1)
+df.head(2)
+
+
+
+
+26)  data["temp_date"] = data.apply(lambda x :x["admittime"] if x["is_ckd_condition"] else np.NaN ,axis=1)
+
+
+27)  df = data.groupby("subject_id").agg(
+    is_ckd_diagnosed = pd.NamedAgg("is_ckd_condition",lambda x :any(x)),
+   ckd_diagnosed_date = pd.NamedAgg("temp_date","min")
+).reset_index()
+
+
+28) print("NO OF PATIENT IN Louisiana  STATE :-->", l['PATIENT_ID'].nunique())
+print("NO OF PATIENT IN Other STATE except Louisiana :-->", o ['PATIENT_ID'].nunique())
+print("TOTAL NO OF PATIENT :------------->", data.PATIENT_ID.nunique())
+
+ 
+
+sns.set_style("darkgrid", {"grid.color": ".6", "grid.linestyle": ":"})
+palette = {
+    'Low': 'tab:red',
+    'Medium': 'tab:cyan',
+    'High': 'tab:green'
+            }
+
+ 
+
+fig, (ax1, ax2) = plt.subplots(1,2, figsize=(20,8))
+sns.histplot(data=l, x='MPR_AVG_PATIENT', stat = 'percent', binwidth=20, ax=ax1, hue = 'adherence_level', palette=palette)
+ax1.set_xlim(-10, 250)
+ax1.set_title("Louisiana  State :-->", color = 'green', fontsize = 30)
+
+ 
+
+
+sns.histplot(data=o , x='MPR_AVG_PATIENT', stat = 'percent' , binwidth=20, ax=ax2, hue = 'adherence_level', palette=palette)
+ax2.set_title("Other  State :-->", color = 'blue', fontsize = 30)
+
+ 
+
+ax2.set_xlim(-10, 250) 
+
+ 
+
+  
+
