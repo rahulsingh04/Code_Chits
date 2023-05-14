@@ -10,3 +10,6 @@ git push -u origin main
 
 ### convert this [(1, 1), (2, 3), (4, 4)]   :----------------> [1, 1, 2, 3, 4, 4]
 [x for tup in x3 for x in tup]
+
+# Remove all non-word characters and underscores from the string
+my_string = re.sub(r"[\W_]+", "", my_string)
