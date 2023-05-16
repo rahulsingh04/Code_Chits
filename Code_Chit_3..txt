@@ -27,3 +27,6 @@ my_string = re.sub(r"[\W_]+", "", my_string)
                 print("else statement")
                 seen.add(nums)
         return False
+
+#################
+		nums =[nums1.pop(nums1.index(i)) for i  in nums2 if i in nums1]
