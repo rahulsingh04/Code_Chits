@@ -30,3 +30,13 @@ my_string = re.sub(r"[\W_]+", "", my_string)
 
 #################
 		nums =[nums1.pop(nums1.index(i)) for i  in nums2 if i in nums1]
+
+################
+
+def extract_year_semester(string):
+    pattern = r"(year|semester)\s*(\d)"
+    match = re.search(pattern, string, re.IGNORECASE)
+    return match.groups() if match else np.NaN
+    
+    df['year'] = df['PID'].apply(lambda x: extract_year_semester(x))
+
