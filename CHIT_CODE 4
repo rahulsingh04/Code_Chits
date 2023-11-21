@@ -1,0 +1,19 @@
+####   GROUPBY DICTIONARY
+
+import pandas as pd
+
+# Sample data
+data = {
+    'security_id': [1, 2, 3, 4, 5],
+    'a': ['apple', 'banana', 'orange', 'apple', 'orange'],
+    'b': [10, 15, 20, 25, 30]
+}
+
+df = pd.DataFrame(data)
+
+# Using pd.NamedAgg to create the desired dictionary
+result_dict = df.groupby('security_id').apply(
+    lambda group: pd.Series({'key_value_pair': dict(zip(group['a'], group['b']))})
+)['key_value_pair']
+
+print(result_dict)
